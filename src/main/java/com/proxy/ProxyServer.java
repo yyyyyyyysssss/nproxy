@@ -20,23 +20,38 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ProxyServer {
 
-    private static final String host = LANIPv4();
+    private static final Logger LOGGER = Logger.getLogger(ProxyServer.class.getName());
 
-    private static int port = 11080;
+    private final String lanPrefix = "192.168";
 
-    private static final boolean auth = false;
+    private String host;
+
+    private int port;
+
+    private final int defaultPort = 11080;
+
+    private boolean auth = false;
+
+    public ProxyServer(){
+        this(null);
+    }
+
+    public ProxyServer(String[] args){
+        this.host = LANIPv4();
+        this.port = getPort(args);
+    }
 
     public static void main(String[] args) {
-        if (args != null && ((args.length & 1) == 0)) {
-            for (int i = 0, j = i + 1; i < args.length - 1; i++) {
-                if (args[i].equals("-p")){
-                    port=Integer.parseInt(args[j]);
-                }
-            }
-        }
+        ProxyServer proxyServer = new ProxyServer(args);
+        proxyServer.start();
+    }
+
+    public void start(){
         final EventLoopGroup bossEventLoopGroup = new NioEventLoopGroup(2);
         final EventLoopGroup workEventLoopGroup = new NioEventLoopGroup(8);
         try {
@@ -49,38 +64,47 @@ public class ProxyServer {
                             ChannelPipeline pipeline = socketChannel.pipeline();
                             pipeline.addLast(new SocksInitRequestDecoder());
                             pipeline.addLast(new SocksMessageEncoder());
-                            pipeline.addLast(new SocksRequestHandler(bossEventLoopGroup, auth));
+                            pipeline.addLast(new SocksRequestHandler(bossEventLoopGroup, isAuth()));
                         }
                     });
-            if (host == null) {
+            if (getHost() == null) {
                 return;
             }
-            System.out.println("当前主机局域网ip:" + host + "; 代理端口:" + port + "; 认证:" + (auth ? "需要认证" : "无需认证"));
-            ChannelFuture channelFuture = serverBootstrap.bind("127.0.0.1", port).sync();
-            System.out.println("socks5代理已启动!!!");
+            LOGGER.info("当前主机局域网ip:" + getHost() + "; 代理端口:" + getPort() + "; 认证:" + (isAuth() ? "需要认证" : "无需认证"));
+            ChannelFuture channelFuture = serverBootstrap.bind(getHost(), getPort()).sync();
+            LOGGER.info("socks5代理已启动!!!");
             channelFuture.channel().closeFuture().sync();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE,"代理服务器启动失败",e);
         } finally {
             bossEventLoopGroup.shutdownGracefully();
             workEventLoopGroup.shutdownGracefully();
         }
-
     }
 
-    public static String LANIPv4() {
+    private int getPort(String[] args){
+        if (args != null && ((args.length & 1) == 0)) {
+            for (int i = 0, j = i + 1; i < args.length - 1; i++) {
+                if (args[i].equals("-p")){
+                    return Integer.parseInt(args[j]);
+                }
+            }
+        }
+        return defaultPort;
+    }
+
+    private String LANIPv4() {
         Enumeration<NetworkInterface> enumeration = null;
         try {
             enumeration = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE,"获取本地网卡接口失败",e);
         }
         if (enumeration == null) {
             return null;
         }
         //ipv4 地址集
-        List<String> ipv4Result = new ArrayList<String>();
-
+        List<String> ipv4Result = new ArrayList<>();
         while (enumeration.hasMoreElements()) {
             final NetworkInterface networkInterface = enumeration.nextElement();
             final Enumeration<InetAddress> en = networkInterface.getInetAddresses();
@@ -96,12 +120,25 @@ public class ProxyServer {
 
         if (!ipv4Result.isEmpty()) {
             for (String ip : ipv4Result) {
-                if (ip.startsWith("192.168")) {
+                if (ip.startsWith(lanPrefix)) {
                     return ip;
                 }
             }
         }
 
         return null;
+    }
+
+
+    public String getHost() {
+        return host;
+    }
+
+    public boolean isAuth() {
+        return auth;
+    }
+
+    public int getPort() {
+        return port;
     }
 }

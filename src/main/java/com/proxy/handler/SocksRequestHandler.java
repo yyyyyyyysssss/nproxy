@@ -1,11 +1,18 @@
 package com.proxy.handler;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
+
+import java.util.logging.Logger;
+
 //该处理器主要用于初始化，连接，认证等
 public class SocksRequestHandler extends SimpleChannelInboundHandler<SocksRequest> {
+
+    private static final Logger LOGGER = Logger.getLogger(SocksRequestHandler.class.getName());
+
 
     private Boolean auth;
 
@@ -21,7 +28,7 @@ public class SocksRequestHandler extends SimpleChannelInboundHandler<SocksReques
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, SocksRequest socksRequest) throws Exception {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, SocksRequest socksRequest) {
         switch (socksRequest.requestType()){
             case INIT:
                 if (auth){//需要认证时，添加密码解码器到管道首部，并返回需要认证密码报文
@@ -37,10 +44,11 @@ public class SocksRequestHandler extends SimpleChannelInboundHandler<SocksReques
                     SocksAuthRequest socksAuthRequest=(SocksAuthRequest)socksRequest;
                     //认证成功，添加命令解码器到管道首部，并移除认证解码器
                     if (socksAuthRequest.username().equals(userName)&&socksAuthRequest.password().equals(password)){
+                        LOGGER.info("用户认证成功");
                         channelHandlerContext.pipeline().addFirst(new SocksCmdRequestDecoder());
                         channelHandlerContext.writeAndFlush(new SocksAuthResponse(SocksAuthStatus.SUCCESS));
                     }else {
-                        System.out.println("账户或密码不正确");
+                        LOGGER.warning("账户或密码不正确");
                         channelHandlerContext.writeAndFlush(new SocksAuthResponse(SocksAuthStatus.FAILURE));
                     }
                 }else {//无需认证直接返回认证成功
@@ -55,6 +63,7 @@ public class SocksRequestHandler extends SimpleChannelInboundHandler<SocksReques
                     //将数据传递到给命令处理器处理
                     channelHandlerContext.fireChannelRead(socksCmdRequest);
                 }else {//非tcp连接，返回连接方式不支持，然后直接关闭通道
+                    LOGGER.warning("仅支持TCP代理");
                     channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.COMMAND_NOT_SUPPORTED,SocksAddressType.IPv4));
                     channelHandlerContext.close();
                     return;

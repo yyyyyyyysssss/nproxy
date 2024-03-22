@@ -15,7 +15,7 @@ public class SocksCommandRequestHandler extends SimpleChannelInboundHandler<Sock
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, SocksCmdRequest socksCmdRequest) throws Exception {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, SocksCmdRequest socksCmdRequest) {
         String targetHost=socksCmdRequest.host();
         int targetPort=socksCmdRequest.port();
         ProxyRequest proxyRequest=new ProxyRequest(targetHost,targetPort,channelHandlerContext.channel());
