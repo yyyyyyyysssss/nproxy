@@ -12,6 +12,7 @@ import io.netty.handler.codec.socks.SocksCmdStatus;
 
 import java.util.logging.Logger;
 
+//用于与目标服务器建立连接的Handler
 public class ConnectTargetServerHandler extends SimpleChannelInboundHandler<SocksCmdRequest> {
 
     private static final Logger LOGGER = Logger.getLogger(ConnectTargetServerHandler.class.getName());

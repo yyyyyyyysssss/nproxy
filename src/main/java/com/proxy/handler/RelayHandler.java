@@ -9,6 +9,7 @@ import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+//用于消息转发的Handler
 public class RelayHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getLogger(RelayHandler.class.getName());

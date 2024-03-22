@@ -6,6 +6,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.SocksCmdRequest;
 
+//用于接收命令并做相应处理的Handler
 public class SocksCommandRequestHandler extends SimpleChannelInboundHandler<SocksCmdRequest> {
 
     private EventLoopGroup bossEventLoopGroup;

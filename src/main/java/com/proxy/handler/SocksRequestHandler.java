@@ -7,7 +7,7 @@ import io.netty.handler.codec.socks.*;
 
 import java.util.logging.Logger;
 
-//该处理器主要用于初始化，连接，认证等
+//该Handler主要用于初始化，连接，认证等
 public class SocksRequestHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
     private static final Logger LOGGER = Logger.getLogger(SocksRequestHandler.class.getName());
