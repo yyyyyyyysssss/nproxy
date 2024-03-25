@@ -1,2 +1,2 @@
-# s5-netty
-基于netty实现的socks5服务器
+# nproxy
+基于netty实现的socks5正向代理服务器
