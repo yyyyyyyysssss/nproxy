@@ -57,15 +57,21 @@ public class SocksRequestHandler extends SimpleChannelInboundHandler<SocksReques
             case CMD:
                 SocksCmdRequest socksCmdRequest=(SocksCmdRequest)socksRequest;
                 SocksCmdType socksCmdType = socksCmdRequest.cmdType();
-                if (socksCmdType==SocksCmdType.CONNECT){//如果是tcp代理,添加命令处理器并移除当前处理器
-                    channelHandlerContext.pipeline().addLast(new SocksCommandRequestHandler(bossEventLoopGroup)).remove(this);
-                    //将数据传递到给命令处理器处理
-                    channelHandlerContext.fireChannelRead(socksCmdRequest);
-                }else {//非tcp连接，返回连接方式不支持，然后直接关闭通道
-                    LOGGER.warning("仅支持TCP代理");
-                    channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.COMMAND_NOT_SUPPORTED,socksCmdRequest.addressType()));
-                    channelHandlerContext.close();
-                    return;
+                switch (socksCmdType){
+                    //如果是tcp代理,添加命令处理器并移除当前处理器
+                    case CONNECT :
+                        channelHandlerContext.pipeline().addLast(new SocksCommandRequestHandler(bossEventLoopGroup)).remove(this);
+                        //将数据传递到给命令处理器处理
+                        channelHandlerContext.fireChannelRead(socksCmdRequest);
+                        break;
+                    //TODO udp转发
+                    case UDP:
+
+                        break;
+                    default:
+                        LOGGER.warning("不支持的代理方式: " + socksCmdType.name());
+                        channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.COMMAND_NOT_SUPPORTED,socksCmdRequest.addressType()));
+                        channelHandlerContext.close();
                 }
                 break;
             case UNKNOWN://未知类型关闭连接
