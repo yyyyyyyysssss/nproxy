@@ -27,8 +27,13 @@ public class RelayHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         InetSocketAddress ctxInetSocketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        LOGGER.info("Forward message source: "+getAddress(ctxInetSocketAddress) + " target:" + getAddress(inetSocketAddress));
-        relayChannel.writeAndFlush(msg);
+        if(relayChannel.isActive()){
+            relayChannel.writeAndFlush(msg);
+            LOGGER.info("Forward message success; source:"+getAddress(ctxInetSocketAddress) + " target:" + getAddress(inetSocketAddress));
+        }else {
+            LOGGER.info("Forward message fail, channel is not active; source:"+getAddress(ctxInetSocketAddress) + " target:" + getAddress(inetSocketAddress));
+        }
+
     }
 
 

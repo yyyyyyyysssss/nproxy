@@ -46,10 +46,10 @@ public class ConnectTargetServerHandler extends SimpleChannelInboundHandler<Sock
                     channelHandlerContext.pipeline().remove(ConnectTargetServerHandler.class);
                     //向目标服务器转发消息
                     channelHandlerContext.pipeline().addLast(new RelayHandler(channelFuture.channel()));
-                    channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.SUCCESS,SocksAddressType.IPv4));
+                    channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.SUCCESS,socksCmdRequest.addressType()));
                 }else {
                     LOGGER.info("目标主机："+proxyRequest.getHost()+";目标端口："+proxyRequest.getPort()+"连接失败!!!");
-                    channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.FAILURE,SocksAddressType.IPv4));
+                    channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.FAILURE,socksCmdRequest.addressType()));
                     channelHandlerContext.close();
                 }
             }

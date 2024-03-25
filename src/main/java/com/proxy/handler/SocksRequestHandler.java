@@ -63,7 +63,7 @@ public class SocksRequestHandler extends SimpleChannelInboundHandler<SocksReques
                     channelHandlerContext.fireChannelRead(socksCmdRequest);
                 }else {//非tcp连接，返回连接方式不支持，然后直接关闭通道
                     LOGGER.warning("仅支持TCP代理");
-                    channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.COMMAND_NOT_SUPPORTED,SocksAddressType.IPv4));
+                    channelHandlerContext.writeAndFlush(new SocksCmdResponse(SocksCmdStatus.COMMAND_NOT_SUPPORTED,socksCmdRequest.addressType()));
                     channelHandlerContext.close();
                     return;
                 }
